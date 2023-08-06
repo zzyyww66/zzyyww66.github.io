@@ -2,7 +2,7 @@
 <search>
   <entry>
     <title>configuration-problems-after-reinstalling-qt</title>
-    <url>/2023/08/06/configuration-problems-after-reinstalling-qt/</url>
+    <url>/2023/08/06/A%20Configuration%20Problem%20after%20Reinstalling%20QT/</url>
     <content><![CDATA[<h1 id="The-core-is-a-plugin-named-‘Clang-Code-Model’"><a href="#The-core-is-a-plugin-named-‘Clang-Code-Model’" class="headerlink" title="The core is a plugin named ‘Clang Code Model’"></a>The core is a plugin named ‘Clang Code Model’</h1><ul>
 <li><h4 id="During-installation-I-have-review-the-concept-of-MinGW-MSVC-and-UWP"><a href="#During-installation-I-have-review-the-concept-of-MinGW-MSVC-and-UWP" class="headerlink" title="During installation, I have review the concept of MinGW, MSVC and UWP"></a>During installation, I have review the concept of <em>MinGW</em>, <em>MSVC</em> and <em>UWP</em></h4></li>
 </ul>
@@ -49,36 +49,8 @@
       </tags>
   </entry>
   <entry>
-    <title>hello world</title>
-    <url>/2023/08/02/hello-world/</url>
-    <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<span id="more"></span>
-
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-]]></content>
-      <categories>
-        <category>hahahah</category>
-      </categories>
-      <tags>
-        <tag>npm</tag>
-        <tag>hexo</tag>
-        <tag>github</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>to prepare a wechat miniappnication</title>
-    <url>/2023/08/02/to-prepare-a-wechat-miniappnication/</url>
+    <url>/2023/08/02/to%20Prepare%20a%20Wechat%20Mminiapp/</url>
     <content><![CDATA[<h2 id="A-game-like-LOL"><a href="#A-game-like-LOL" class="headerlink" title="A game like LOL"></a>A game like LOL</h2><p>I want to build a game like LOL, that has 1v1 system, weapon-system, and money system.</p>
 <p>And the two competitors should take advantage of the last hit, and exchange blood and so on to get more money or vantage.</p>
 <p>Today is the first day.</p>
@@ -100,5 +72,95 @@
 <p>that is quite easy , tomorrow I will learn CSS.</p>
 <p>seeeee you soooon.</p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>The Markdown Cheat Sheet</title>
+    <url>/2023/08/06/The%20Markdown%20Cheat%20Sheet/</url>
+    <content><![CDATA[<p>Someone once said,”Everyone should learn Markdown.”😕😕👎<br>Although it does look like exaggerated, as a bloger, I really have to learn the Markdown syntaxs.<br>In all, writing rich-text (formatted text), Markdown is just one of the methods.<br>We can also use HTML tags to style your text.</p>
+<p><strong>There just a simple or elementary of only Markdown syntaxs.</strong></p>
+<span id="more"></span>
+
+<h1 id="RUNOOB-Markdown-Test"><a href="#RUNOOB-Markdown-Test" class="headerlink" title="RUNOOB Markdown Test"></a>RUNOOB Markdown Test</h1><h2 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World!"></a>Hello World!</h2><h1 id="this-is-a"><a href="#this-is-a" class="headerlink" title="this is a"></a>this is a</h1><h2 id="this-is-a-1"><a href="#this-is-a-1" class="headerlink" title="this is a"></a>this is a</h2><p>you use a an<br>the game is a good boy<br><em>this is a italy</em><br><em>this is a italy</em><br><strong>this is a bolder</strong><br><strong>this is a bolder</strong><br><strong><em>this is a combination</em></strong><br><strong><em>this is a combination</em></strong></p>
+<hr>
+<hr>
+<hr>
+<hr>
+<p><del>good</del><br><u>good</u><br>pujiangzhongxue <a href="pujiangxiandexuexi">^1</a></p>
+<ul>
+<li>hello</li>
+<li>hello</li>
+</ul>
+<ul>
+<li>hello</li>
+<li>hello</li>
+</ul>
+<ul>
+<li>hello</li>
+</ul>
+<ol>
+<li>hello</li>
+<li>hello</li>
+<li>hello</li>
+<li>first</li>
+</ol>
+<ul>
+<li>nihao</li>
+<li>good</li>
+</ul>
+<ol start="2">
+<li>second</li>
+</ol>
+<ul>
+<li>buhao</li>
+<li>good<blockquote>
+<p>nihao<br>wohao</p>
+</blockquote>
+</li>
+</ul>
+<ol>
+<li>nihao<blockquote>
+<p>nihaoshuo<br>wodeshuo</p>
+</blockquote>
+</li>
+</ol>
+<p><code>printf()</code> function</p>
+<pre><code>&lt;int a = 2;
+int b = 2;
+float c = 3;
+</code></pre>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> c = <span class="number">2</span>;</span><br><span class="line"><span class="type">int</span> d = <span class="number">4</span>;</span><br></pre></td></tr></table></figure>
+
+<p>come to <a href="https://baidu.com/">baidu</a><br></p>
+<table>
+<thead>
+<tr>
+<th align="center">nihao</th>
+<th align="center">woshi</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">hello</td>
+<td align="center">nide</td>
+</tr>
+<tr>
+<td align="center">shiwo</td>
+<td align="center">hhh</td>
+</tr>
+</tbody></table>
+<br>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">graph LR</span><br><span class="line">A[方形] --&gt;B(圆角)</span><br><span class="line">    B --&gt; C&#123;条件a&#125;</span><br><span class="line">    C --&gt;|a=1| D[结果1]</span><br><span class="line">    C --&gt;|a=2| E[结果2]</span><br><span class="line">    F[横向流程图]</span><br></pre></td></tr></table></figure>
+<https://taobao.com>
+do you want to go to [baidu][baidu]?
+
+<p><img src="https://imgold.wbiao.com.cn/uploads/allimg/140224/5-140224145F9559.jpg" alt="this is a img" title="Hemingway"></p>
+]]></content>
+      <categories>
+        <category>Writing</category>
+        <category>doooooo</category>
+      </categories>
+      <tags>
+        <tag>Markdown</tag>
+        <tag>Writing</tag>
+      </tags>
   </entry>
 </search>

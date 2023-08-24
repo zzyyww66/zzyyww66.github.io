@@ -1,6 +1,663 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title></title>
+    <url>/2023/08/24/8.10/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-4"><a href="#day-4" class="headerlink" title="day 4"></a>day 4</h3><p><strong>Problem description</strong>:<br>A scenic spot has a total of N attractions, numbered 1 to N. A total of N − 1 two-way ferry lines connect the sites, forming a tree-like structure. Travel between attractions can only be done by these ferries and takes a certain amount of time.</p>
+<p>Xiao Ming is the senior guide of this scenic spot, and he takes guests to visit K scenic spots in a fixed order every day: A1; A2; : : :; AK. Today, due to time constraints, Xiao Ming decided to skip one of the attractions and only take tourists to visit K − 1 of them in order. Specifically, if Xiao Ming chooses to skip the Ai, then he will take the tourists on a tour of $A1, A_2… A{i−1},A_{i+1},A_K$(1 ≤ i ≤ K). For any Ai, please calculate how much time Xiao Ming needs to spend on the ferry between the scenic spots if this scenic spot is skipped?</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>One thing to be sure of is that since the graph in question is a tree, for any two vertices, their shortest path is their simple path.<br>To find the simple path distance between two nodes in a tree, one can think of using their nearest common ancestor, the LCA.<br>Let $dist[u]$be the distance from the vertex of u to the root node, then the distance between u and v is $dist[u] + dist[v] -2 * dist[lca(u, v)]$.<br>Therefore, this topic is an LCA template problem, the use of multiplication method or tarjan algorithm is OK, the specific algorithm knowledge please learn by yourself.<br>The distance may burst int, so it is recommended to use long long for all integers to avoid trouble.<br><strong>Code implementation</strong></p>
+<pre>
+
+    #include <bits/stdc++.h>
+    using namespace std;
+    const int N = 1e5 + 10;
+    using ll = long long;
+    vector<pair<int, int>> g[N];
+    ll dep[N], f[N][30], dist[N];
+    //倍增LCA预处理
+    void dfs(int u, int fa, ll d) {
+        dep[u] = dep[fa] + 1, dist[u] = d, f[u][0] = fa;
+        for (int i = 1; (1 << i) <= dep[u]; i ++) f[u][i] = f[f[u][i - 1]][i - 1];
+        for (auto &p : g[u]) {
+            if (p.first == fa) continue;
+            dfs(p.first, u, d + p.second);
+        }
+    }
+    //求a和b的lca
+    int lca(int a, int b) {
+        if (dep[a] < dep[b]) swap(a, b);
+        for (int i = 20; i >= 0; i --) {
+            if (dep[f[a][i]] >= dep[b]) a = f[a][i];
+            if (a == b) return a;
+        }
+        for (int i = 20; i >= 0; i --) {
+            if (f[a][i] != f[b][i]) a = f[a][i], b = f[b][i];
+        }
+        return f[a][0];
+    }
+    ll get(int a, int b) {
+        return dist[a] + dist[b] - 2 * dist[lca(a, b)];
+    }
+    int main () {
+        int n, k; cin >> n >> k;
+        for (int i = 1; i < n; i ++) {
+            int u, v, t; cin >> u >> v >> t;
+            g[u].push_back({v, t}), g[v].push_back({u, t});
+        }
+        vector<int> a(k);
+        for (auto &x : a) cin >> x;
+        dfs(1, 0, 0);
+        //求出原本整条路径的和
+        ll sum = 0;
+        for (int i = 1; i < k; i ++) sum += get(a[i - 1], a[i]);
+        //依次求出删除每个点时的和
+        for (int i = 0; i < k; i ++) {
+            ll ans = sum;
+            //减去当前顶点和左右顶点的路径距离
+            if (i != 0) ans -= get(a[i], a[i - 1]);
+            if (i != k - 1) ans -= get(a[i], a[i + 1]);
+            //左右都有顶点时， 要把两个顶点接到一起
+            if (i != 0 && i != k - 1) ans += get(a[i - 1], a[i + 1]);
+            cout << ans << " ";
+        }
+        return 0;
+    } <code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.11/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-5"><a href="#day-5" class="headerlink" title="day 5"></a>day 5</h3><p><strong>Problem description</strong>:<br>Given a series of integers of length N: $A_1,A_2… A_N$.</p>
+<p>You will repeat this procedure K times: each time, select the smallest integer in the sequence (if there is more than one minimum, select the first one) and delete it. And add the integer adjacent to it to the deleted value.</p>
+<p>Output the sequence after K operations.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>Because of the large number of deletions, it’s not hard to think of using a linked list.<br>This problem requires dynamic minimization, so obviously you can use a heap.<br>Each time the minimum value of the subscript is removed from the heap and then deleted in the linked list.<br>But the special thing in this case is to delete it. And add the integer adjacent to it to the deleted value, so it causes the weight of the elements still in the heap to change.<br>Notice that each deletion only makes some elements larger, not smaller. That is, it might make the original minimum not the minimum.<br>Therefore, when we take out the minimum value in the heap, we need to compare the ordering weight of this element with the actual value. If the actual value becomes larger, the current element is not necessarily the minimum value and needs to be put back in the heap.<br><strong>Code implementation</strong></p>
+<pre>
+
+    #include <bits/stdc++.h>
+    using namespace std;
+    using ll = long long;
+    const int N = 5e5 + 10;
+    ll v[N], l[N], r[N];
+    //双向链表的删除操作， 删除x结点
+    void del(int x) {
+        r[l[x]] = r[x], l[r[x]] = l[x];
+        v[l[x]] += v[x], v[r[x]] += v[x];
+    }
+    int main () {
+        int n, k; cin >> n >> k;
+        //最小堆， 堆中的元素是{权值， 结点下标}
+        priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<pair<ll, int>>> h;
+        //输入并构造双向链表
+        r[0] = 1, l[n + 1] = n;
+        for (int i = 1; i <= n; i ++)
+            cin >> v[i], l[i] = i - 1, r[i] = i + 1, h.push({v[i], i});
+        while (k --) {
+            auto p = h.top(); h.pop();
+            //如果v发生变化， 则目前的元素不一定是最小值， 需要重新放入堆中
+            if (p.first != v[p.second]) h.push({v[p.second], p.second}), k ++;
+            else del(p.second);
+        }
+        //输出链表剩余的元素
+        int head = r[0];
+        while (head != n + 1) {
+            cout << v[head]<< " ";
+            head = r[head];
+        }
+        return 0;
+    } <code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.13/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-7"><a href="#day-7" class="headerlink" title="day 7"></a>day 7</h3><p><strong>Problem description</strong>:<br>Xiao Ming is responsible for maintaining a strange project of the company. The project’s code is constantly branching but never merging.<br>Now the code of this project has a total of N versions, numbered 1 to N, of which version 1 is the original version.<br>All versions of the code except version 1 happen to have a direct parent version; That is, these N versions form a tree structure with 1 as the root.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>The conventional ancestor finding method usually moves up 1 at a time, and the multiplication method moves up 2^k at a time. nlogn processes the multiplication array and logn query.<br>Note:<br>Mention a problem that the solution area does not say, do not use cin to read, it will time out.<br><strong>Code implementation</strong></p>
+<pre>
+
+    #include<bits/stdc++.h>
+    using namespace std;
+    define maxx 130000
+    define int long long
+    int n,q,a,b;
+    int fa[maxx];
+    int faaa[maxx][22];
+    vector<int> G[maxx];
+    int dep[maxx];
+    void starting()
+    {
+      for(int i=1;i<=n;++i)
+       faaa[i][0]=fa[i];
+     
+     for(int j=1;j<=20;++j) //循环位置
+      for(int i=1;i<=n;++i)
+        faaa[i][j]=faaa[faaa[i][j-1]][j-1];
+    }
+    void dfs(int i)
+    {
+       for(int j=0;j<G[i].size();++j)
+       {dep[G[i][j]]=dep[i]+1;
+        dfs(G[i][j]);}
+     
+    }
+    int cal(int x,int y)
+    {
+      if(dep[x]>dep[y]) return 0;
+      int cha=dep[y]-dep[x];
+      for(int i=0;i<20;++i)
+      {
+        if(cha%2==1) y=faaa[y][i];
+        cha/=2;
+      }
+      if(y==x) return 1;
+      else return 0;
+    }
+    signed main()
+    {
+      scanf("%d %d",&n,&q);
+      for(int i=1;i<n;++i)
+     {scanf("%d %d",&a,&b);
+     fa[b]=a;
+     G[a].push_back(b);
+     }
+     for(int i=1;i<=n;++i)
+      if(fa[i]==0) dfs(i);
+      starting();
+     for(int i=1;i<=q;++i)
+     {
+      scanf("%d %d",&a,&b);
+      if(cal(a,b)) cout<<"YES\n";
+      else cout<<"NO\n";
+     }
+      
+     
+    }
+<code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.12/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-6"><a href="#day-6" class="headerlink" title="day 6"></a>day 6</h3><p><strong>Problem description</strong>:<br>Crop hybridization is an important step in crop cultivation. There are N known crops (numbers 1 to N), and the time from sowing to ripening for the i is Ti. Crops can be crossed in pairs, and the hybridization time takes the longer one of the two species.<br>If crop A is planted for 5 days and crop B is planted for 7 days, then cross AB takes 7 days. Crop hybridization results in a fixed crop, and the newly created crop still belongs to one of N crops.<br>Initially, seeds of M of these crops are available (an unlimited number of which can support multiple crosses). Multiple hybridization processes can be performed simultaneously.<br>Ask how many days is the minimum required to obtain a given target seed<br>If there are 4 crops ABCD, the maturity time is 5 days, 7 days, 3 days, 8 days. The initial seed of AB and AB crops, the target seed is D, and the known hybridization situation is A×B→C, A×C→D.<br>The shortest hybridization process is:<br>From day 1 to day 7 (the time of crop B), A×B→C.<br>On days 8 to 12 (the time of crop A), A×C→D. It takes 12 days to get the seeds of crop D.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>General idea: Essentially, I used the Dijkstra algorithm. If you don’t have a friend who knows, as long as you know the function of this algorithm, give a graph, a starting point, you can find the shortest distance between all the points on the graph and the starting point.<br>But in the specific code details, this question still needs to be carefully considered.<br>Such as the way the graph is stored, and how the graph in this problem is different from the general one.<br>First, observe the range, the number of seeds in 2000. It’s not big, but it’s almost impossible for us to store it in an adjacency matrix. Because graph[2000][2000] takes up 400,000 space.<br>Second, in this problem two seeds make a new seed, and if we store it in an adjacency matrix, then what should we put in the two-dimensional array? In a general graph[i][j], the weights between two points i and j are stored. But this problem stores the result of the synthesis of two seeds.<br>Therefore, I think the adjacency matrix approach has problems both in terms of space and help in writing code. I use a linked list to store the synthetic path of each seed<br><strong>Code implementation</strong></p>
+<pre>
+
+    int DistFromStart[2001];
+    memset(DistFromStart, 9999, sizeof(int) * 2001);
+    for (int i = 1; i <= m; i++) {
+        DistFromStart[ishave[i]] = 0;
+    }
+    queue <node>q;
+    for (int i = 1; i  0) {//可以杂交 
+            int product = i.result;
+                int TimeCost = max(growtime[cur.id], growtime[i.second]) + max(cur.dist,DistFromStart[i.second]);
+                if (TimeCost < DistFromStart[product]) {
+                    DistFromStart[product] = TimeCost;
+                    q.push({ product,TimeCost });
+                }
+            }
+        }
+    cout << DistFromStart[t]; <code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.17/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-8"><a href="#day-8" class="headerlink" title="day 8"></a>day 8</h3><p><strong>Problem description</strong>:<br>There are n bamboo poles on the X-axis. They are parallel to the Y-axis, with the bottom vertical coordinate being 0 and the horizontal coordinate being x1, x2,… , xn. The height of the bamboo pole is infinite, and the width can be ignored. The snail wants to go from the origin to the bottom of the NTH bamboo pole which is the coordinate (xn, 0). It can only crawl on the X-axis or on the bamboo pole, and the crawling speed on the X-axis is 1 unit per second; Due to the influence of gravity, the snail moves up and down the bamboo pole at 0.7 and 1.3 units per second, respectively.<br>In order to reach its destination quickly, it uses magic to create a portal (0 &lt; i &lt; n) between the i and i + 1 bamboo poles, and if the snail is located at the height of the i bamboo pole ai (xi, ai), You can instantly reach the position where the height of the i+1 bamboo pole is bi+1 (xi+1, bi+1), please calculate the minimum number of seconds it will take the snail to reach the destination.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>dp[i][j] represents the shortest time for the snail to reach the i pole, and j represents the state.<br>j &#x3D; 0: Go to the bottom of the pole<br>j &#x3D; 1: Go to the portal of the pole<br>P.S. Since it is only related to the previous rod state, two variables are actually used, and two-dimensional arrays are easy to understand<br>Time complexity: O(n)<br><strong>Code implementation</strong></p>
+<pre>
+
+    import java.io.*;
+    import java.util.*;
+    public class Main{
+    static int maxn = 200005,n,m;
+    static long INF = (long)2e18,ans = 0,mod = (int)1e9+7;
+    static Scanner sc = new Scanner (System.in);
+    static BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+    static StreamTokenizer st  =new StreamTokenizer(bf);
+    static PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out));
+    public static void main(String[]args) throws IOException{
+        int T = 1;
+        //T = Integer.parseInt(S());
+        while(T-->0) solve();
+        pw.flush();
+    }
+    static final int I() throws IOException {
+        st.nextToken();
+        return (int)st.nval;
+    }
+    static void solve() throws IOException{
+        n = I();
+        long x[] = new long [n+1];
+        for(int i=1;i<=n;i++) x[i] = I();
+        int []a = new int [n+1];
+        int []b = new int [n+1];
+        for(int i=1;i<n;i++) {
+            a[i] = I();b[i] = I();
+        }
+        double dp[][] = new double[n+1][2];
+        dp[1][0] = x[1]; //底端最小用时
+        dp[1][1] = x[1] + a[1] / 0.7;  //传送门用时
+        for(int i=2; i<=n ; i++) {
+            dp[i][0] = Math.min(dp[i-1][0]+x[i]-x[i-1], dp[i-1][1] + b[i-1]/1.3);
+            dp[i][1] = Math.min(dp[i][0] + a[i] / 0.7, dp[i-1][1] + ((b[i-1]>a[i])?(b[i-1]-a[i])/1.3: (a[i]-b[i-1])/0.7));
+        }
+        pw.printf("%.2f",dp[n][0]);
+    }
+    } <code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.19/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-9"><a href="#day-9" class="headerlink" title="day 9"></a>day 9</h3><p><strong>Problem description</strong>:<br>Xiao Ming is responsible for maintaining a strange project of the company. The project’s code is constantly branching but never merging.<br>Now the code of this project has a total of N versions, numbered 1 to N, of which version 1 is the original version.<br>All versions of the code except version 1 happen to have a direct parent version; That is, these N versions form a tree structure with 1 as the root.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>The conventional ancestor finding method usually moves up 1 at a time, and the multiplication method moves up 2^k at a time. nlogn processes the multiplication array and logn query.<br>Note:<br>Mention a problem that the solution area does not say, do not use cin to read, it will time out.<br><strong>Code implementation</strong></p>
+<pre>
+
+    #include<bits/stdc++.h>
+    using namespace std;
+    define maxx 130000
+    define int long long
+    int n,q,a,b;
+    int fa[maxx];
+    int faaa[maxx][22];
+    vector<int> G[maxx];
+    int dep[maxx];
+    void starting()
+    {
+      for(int i=1;i<=n;++i)
+       faaa[i][0]=fa[i];
+     
+     for(int j=1;j<=20;++j) //循环位置
+      for(int i=1;i<=n;++i)
+        faaa[i][j]=faaa[faaa[i][j-1]][j-1];
+    }
+    void dfs(int i)
+    {
+       for(int j=0;j<G[i].size();++j)
+       {dep[G[i][j]]=dep[i]+1;
+        dfs(G[i][j]);}
+     
+    }
+    int cal(int x,int y)
+    {
+      if(dep[x]>dep[y]) return 0;
+      int cha=dep[y]-dep[x];
+      for(int i=0;i<20;++i)
+      {
+        if(cha%2==1) y=faaa[y][i];
+        cha/=2;
+      }
+      if(y==x) return 1;
+      else return 0;
+    }
+    signed main()
+    {
+      scanf("%d %d",&n,&q);
+      for(int i=1;i<n;++i)
+     {scanf("%d %d",&a,&b);
+     fa[b]=a;
+     G[a].push_back(b);
+     }
+     for(int i=1;i<=n;++i)
+      if(fa[i]==0) dfs(i);
+      starting();
+     for(int i=1;i<=q;++i)
+     {
+      scanf("%d %d",&a,&b);
+      if(cal(a,b)) cout<<"YES\n";
+      else cout<<"NO\n";
+     }
+      
+     
+    }
+<code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.21/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-10"><a href="#day-10" class="headerlink" title="day 10"></a>day 10</h3><p><strong>Problem description</strong>:<br>Given a series of integers of length N: $A_1,A_2… A_N$.</p>
+<p>You will repeat this procedure K times: each time, select the smallest integer in the sequence (if there is more than one minimum, select the first one) and delete it. And add the integer adjacent to it to the deleted value.</p>
+<p>Output the sequence after K operations.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>Because of the large number of deletions, it’s not hard to think of using a linked list.<br>This problem requires dynamic minimization, so obviously you can use a heap.<br>Each time the minimum value of the subscript is removed from the heap and then deleted in the linked list.<br>But the special thing in this case is to delete it. And add the integer adjacent to it to the deleted value, so it causes the weight of the elements still in the heap to change.<br>Notice that each deletion only makes some elements larger, not smaller. That is, it might make the original minimum not the minimum.<br>Therefore, when we take out the minimum value in the heap, we need to compare the ordering weight of this element with the actual value. If the actual value becomes larger, the current element is not necessarily the minimum value and needs to be put back in the heap.</p>
+<p>&lt;– read more –&gt;</p>
+<p><strong>Code implementation</strong></p>
+<pre>
+
+    #include <bits/stdc++.h>
+    using namespace std;
+    using ll = long long;
+    const int N = 5e5 + 10;
+    ll v[N], l[N], r[N];
+    //双向链表的删除操作， 删除x结点
+    void del(int x) {
+        r[l[x]] = r[x], l[r[x]] = l[x];
+        v[l[x]] += v[x], v[r[x]] += v[x];
+    }
+    int main () {
+        int n, k; cin >> n >> k;
+        //最小堆， 堆中的元素是{权值， 结点下标}
+        priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<pair<ll, int>>> h;
+        //输入并构造双向链表
+        r[0] = 1, l[n + 1] = n;
+        for (int i = 1; i <= n; i ++)
+            cin >> v[i], l[i] = i - 1, r[i] = i + 1, h.push({v[i], i});
+        while (k --) {
+            auto p = h.top(); h.pop();
+            //如果v发生变化， 则目前的元素不一定是最小值， 需要重新放入堆中
+            if (p.first != v[p.second]) h.push({v[p.second], p.second}), k ++;
+            else del(p.second);
+        }
+        //输出链表剩余的元素
+        int head = r[0];
+        while (head != n + 1) {
+            cout << v[head]<< " ";
+            head = r[head];
+        }
+        return 0;
+    } <code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.22/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-11"><a href="#day-11" class="headerlink" title="day 11"></a>day 11</h3><p><strong>Problem description</strong>:<br>On the first day, Wukong ate more than half of the total number of peaches, and on the second day, he ate more than half of the remaining peaches, and after that, he ate more than half of the remaining peaches every day, and only one peach was left when he was ready to eat on the n day. Smart you, please help Wukong calculate, he began to eat the first day when the total number of peaches?</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong></p>
+<ol>
+<li>Suppose that on day 3, x&#x3D;1 peach remains; (Equal to the previous day divided by 2 and then -1)</li>
+<li>On day 2, x&#x3D;(1+1)*2&#x3D;4 peaches are left;</li>
+<li>On day 1, x&#x3D;(1+4)*2&#x3D;10 peaches are left;<br>According to induction, the number of peaches left on each day is equal to the number of peaches on the following day plus 1 multiplied by 2<br><strong>Code implementation</strong><pre>
+
+     #include<stdio.h>
+     int main()
+     {
+       int day;
+       while(scanf("%d",&day)!=EOF)
+          {
+              int x=1;
+              for(int i=1;i<day;i++)
+                 x=(1+x)*2;
+                 printf("%d\n",x);
+          }
+     return 0;
+     }</li>
+</ol>
+<code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.23/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-12"><a href="#day-12" class="headerlink" title="day 12"></a>day 12</h3><p><strong>Problem description</strong>:<br>Given A positive integer x, find the shortest possible array of only positive integers A such that there are exactly x to i in A and j is Ai &gt; Aj.</p>
+<p>If there are multiple such arrays, output the one with the smallest lexicographic order.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>First of all, there is a problem with the description of the topic, there is no explanation of the relationship between i and j, it should be to ensure that i &lt; j when Ai &gt; Aj (referred to as reverse order), I do not understand, this is a competition, the description can be so vague, I want to laugh, the water cup is really worthy of its name.<br>Here’s the idea:<br>① Special cases are preferred, the array is a strictly decremented array (each number varies by 1, and the last digit must be 1), as follows:<br>The length is 7, the corresponding array is [7,6,5,4,3,2,1], and according to combinatorial mathematics C(7,2) &#x3D; 21, there are 21 reverse pairs<br>The length is 8, the corresponding array is [8,7,6,5,4,3,2,1], and according to combinatorial mathematics C(8,2) &#x3D; 28, there are 28 reverse pairs<br>Assuming that the number of reverse pairs is x, when x ∈ (21,28), the array length is 8; When x &#x3D; 21, the array length is 7<br>How do you find the array length? Suppose the array length is L, C(L, 2) ≥ x, you can divide the length, you can also directly solve the equation, simple binary equation, junior high school knowledge:<br>L * (L-1) &#x2F; 2 ≥ x<br>&#x3D;&gt; L2 - L - 2x ≥ 0<br>If C(L, 2) is exactly equal to x, then the answer is a strictly decremented array (each digit is 1 different, and the last digit must be 1).<br>② So if C(L,2) is not equal to x, if x &#x3D; 25, we can find L &#x3D; 7 by step 1, the array is [7,6,5,4,3,2,1], a total of 21 pairs of reverse order, then how to complete the difference of 4 pairs? In fact, as long as you add a 5 to the beginning of the array, the array becomes [5,7,6,5,4,3,2,1], with the first 5 and yellow digits in reverse order, just 4 pairs<br>Of course, this is only one of the answers, which does not meet the requirements of minimum lexicographic order. So we need to simplify:</p>
+<ol>
+<li>[5,7,6,5,4,3,2,1] Change 5 to 4 to get [5,7,6,4,4,3,2,1], and it can be found that the number of reverse pairs does not change, because the original bold reverse pair is changed into the modified bold reverse pair, and only this pair has been transferred, so the number of reverse pairs does not change. But the lexicographical order gets smaller.<br>2, [5,7,6,4,4,3,2,1] greedy, subtract 1 from all the yellow parts to get [5,6,5,4,4,3,2,1], obviously the number of reverse pairs remains unchanged, but the lexicographic order becomes smaller.<br>3, [5,6,5,4,4,3,2,1] The yellow part is changed to [5,6,5,4,3,2,1,1], which is equivalent to changing 4 into 1, and it can be found that the number of reverse pairs remains unchanged, but the lexicographical order becomes smaller.<br>4, [5,6,5,4,3,2,1,1] This situation is very similar to the first step, change 5 to 4 to get [5,6,4,4,3,2,1,1], keep repeating steps 1 to 3, you can get the final result:<br>,4,3,3,2,2,1,1 [5]<br>This result is the most “simplified”, that is, the minimum lexicographic order<br><strong>Code implementation</strong><pre>
+
+     n = int(input())
+     x = int((1 + (1+8*n)**0.5) / 2)
+     if x*(x-1) == 2 * n:
+         print(x)
+         print(x,end='')
+         x -= 1
+         while x:
+             print(' ',end='')
+             print(x,end='')
+             x -= 1
+     else:
+         x += 1
+         print(x)
+         total = x*(x-1)//2
+         total -= n
+         from collections import deque
+         res = deque()
+         if total <= x // 2:
+             num = 1
+             while num <= total:
+                 res.append(num)
+                 res.append(num)
+                 num += 1
+             while len(res) < x:
+                     res.append(num)
+                 num += 1
+         else:
+         tmp = x - total - 1
+         num = 1
+         while num <= tmp:
+             res.append(num)
+            res.append(num)
+             num += 1
+         tmp = num
+         while len(res) < x - 1:
+             res.append(num)
+             num += 1
+         res.append(tmp)
+     print(res.pop(),end='')
+     while res:
+         print(' ',end='')
+         print(res.pop(),end='')
+         print() <code></li>
+</ol>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.24/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-12"><a href="#day-12" class="headerlink" title="day 12"></a>day 12</h3><p><strong>Problem description</strong>:<br>There are n bamboo poles on the X-axis. They are parallel to the Y-axis, with the bottom vertical coordinate being 0 and the horizontal coordinate being x1, x2,… , xn. The height of the bamboo pole is infinite, and the width can be ignored. The snail wants to go from the origin to the bottom of the NTH bamboo pole which is the coordinate (xn, 0). It can only crawl on the X-axis or on the bamboo pole, and the crawling speed on the X-axis is 1 unit per second; Due to the influence of gravity, the snail moves up and down the bamboo pole at 0.7 and 1.3 units per second, respectively.<br>In order to reach its destination quickly, it uses magic to create a portal (0 &lt; i &lt; n) between the i and i + 1 bamboo poles, and if the snail is located at the height of the i bamboo pole ai (xi, ai), You can instantly reach the position where the height of the i+1 bamboo pole is bi+1 (xi+1, bi+1), please calculate the minimum number of seconds it will take the snail to reach the destination.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>dp[i][j] represents the shortest time for the snail to reach the i pole, and j represents the state.<br>j &#x3D; 0: Go to the bottom of the pole<br>j &#x3D; 1: Go to the portal of the pole<br>P.S. Since it is only related to the previous rod state, two variables are actually used, and two-dimensional arrays are easy to understand<br>Time complexity: O(n)<br><strong>Code implementation</strong></p>
+<pre>
+
+    import java.io.*;
+    import java.util.*;
+    public class Main{
+    static int maxn = 200005,n,m;
+    static long INF = (long)2e18,ans = 0,mod = (int)1e9+7;
+    static Scanner sc = new Scanner (System.in);
+    static BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+    static StreamTokenizer st  =new StreamTokenizer(bf);
+    static PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out));
+    public static void main(String[]args) throws IOException{
+        int T = 1;
+        //T = Integer.parseInt(S());
+        while(T-->0) solve();
+        pw.flush();
+    }
+    static final int I() throws IOException {
+        st.nextToken();
+        return (int)st.nval;
+    }
+    static void solve() throws IOException{
+        n = I();
+        long x[] = new long [n+1];
+        for(int i=1;i<=n;i++) x[i] = I();
+        int []a = new int [n+1];
+        int []b = new int [n+1];
+        for(int i=1;i<n;i++) {
+            a[i] = I();b[i] = I();
+        }
+        double dp[][] = new double[n+1][2];
+        dp[1][0] = x[1]; //底端最小用时
+        dp[1][1] = x[1] + a[1] / 0.7;  //传送门用时
+        for(int i=2; i<=n ; i++) {
+            dp[i][0] = Math.min(dp[i-1][0]+x[i]-x[i-1], dp[i-1][1] + b[i-1]/1.3);
+            dp[i][1] = Math.min(dp[i][0] + a[i] / 0.7, dp[i-1][1] + ((b[i-1]>a[i])?(b[i-1]-a[i])/1.3: (a[i]-b[i-1])/0.7));
+        }
+        pw.printf("%.2f",dp[n][0]);
+    }
+    } <code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.7/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-1"><a href="#day-1" class="headerlink" title="day 1"></a>day 1</h3><p><strong>Problem description</strong>:<br>On this day, a snail came to the origin of the two-dimensional coordinate system.<br>There are n bamboo poles on the X-axis. They are parallel to the Y-axis, with the bottom vertical coordinate being 0 and the horizontal coordinate being x1, x2,… , xn. The height of the bamboo pole is infinite, and the width can be ignored. The snail wants to go from the origin to the bottom of the NTH bamboo pole which is the coordinate (xn, 0). It can only crawl on the X-axis or on the bamboo pole, and the crawling speed on the X-axis is 1 unit per second; Due to the influence of gravity, the snail moves up and down the bamboo pole at 0.7 and 1.3 units per second, respectively.<br>In order to reach its destination quickly, it uses magic to create a portal (0 &lt; i &lt; n) between the i and i + 1 bamboo poles, and if the snail is located at the height of the i bamboo pole ai (xi, ai), You can instantly reach the position where the height of the i+1 bamboo pole is bi+1 (xi+1, bi+1), please calculate the minimum number of seconds it will take the snail to reach the destination.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>Consider: Where is the snail likely to be when it reaches a bamboo pole?</p>
+<p>The first: located at the bottom of the bamboo pole<br>Second: Located at the end of the previous portal<br>Consider: Where is the snail likely to be when it leaves a bamboo pole?</p>
+<p>The first: located at the bottom of the bamboo pole<br>Second: Located at the starting point of the current portal<br>From the above, it can be found that a state can be determined by the current bamboo rod number and the position (i.e. height) to reach the bamboo rod.<br>Therefore, define a function double dfs(strat, h) to represent the minimum time it takes to get to the end point from the current position.<br>The final answer is dfs(0, 0) + the x-coordinate of the first bamboo pole<br><strong>Code implementation</strong></p>
+<pre>
+
+    import java.util.Scanner;
+    public class Main {
+    public static void main(String[] args){
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] nums = new int[n];
+        for(int i = 0; i < n; i++) {
+            nums[i] = sc.nextInt();
+        }
+        if(n == 1) {
+            System.out.printf("%.2f", (double) nums[0]);
+            return;
+        }
+        int[][] door = new int[n - 1][2];
+        for(int i = 0; i < n - 1; i++) {
+            door[i][0] = sc.nextInt();
+            door[i][1] = sc.nextInt();
+        }
+        double x1 = nums[0], x2 = nums[0] + door[0][0] / 0.7;
+        for(int i = 1; i < n; i++) {
+            int d = nums[i] - nums[i - 1];
+            double y1 = Math.min(d + x1, x2 + door[i - 1][1] / 1.3);
+            if(i == n - 1) {
+                System.out.printf("%.2f", y1);
+                return;
+            }
+            x2 = Math.min(d + x1 + door[i][0] / 0.7, x2 + (door[i][0] > door[i - 1][1] ? (door[i][0] - door[i - 1][1]) / 0.7 : (door[i - 1][1] - door[i][0]) / 1.3));
+            x1 = y1;
+        }
+    }
+} <code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.8/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-2"><a href="#day-2" class="headerlink" title="day 2"></a>day 2</h3><p><strong>Problem description</strong>:<br>There are n bamboo poles on the X-axis. They are parallel to the Y-axis, with the bottom vertical coordinate being 0 and the horizontal coordinate being x1, x2,… , xn. The height of the bamboo pole is infinite, and the width can be ignored. The snail wants to go from the origin to the bottom of the NTH bamboo pole which is the coordinate (xn, 0). It can only crawl on the X-axis or on the bamboo pole, and the crawling speed on the X-axis is 1 unit per second; Due to the influence of gravity, the snail moves up and down the bamboo pole at 0.7 and 1.3 units per second, respectively.<br>In order to reach its destination quickly, it uses magic to create a portal (0 &lt; i &lt; n) between the i and i + 1 bamboo poles, and if the snail is located at the height of the i bamboo pole ai (xi, ai), You can instantly reach the position where the height of the i+1 bamboo pole is bi+1 (xi+1, bi+1), please calculate the minimum number of seconds it will take the snail to reach the destination.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>dp[i][j] represents the shortest time for the snail to reach the i pole, and j represents the state.<br>j &#x3D; 0: Go to the bottom of the pole<br>j &#x3D; 1: Go to the portal of the pole<br>P.S. Since it is only related to the previous rod state, two variables are actually used, and two-dimensional arrays are easy to understand<br>Time complexity: O(n)<br><strong>Code implementation</strong></p>
+<pre>
+
+    import java.io.*;
+    import java.util.*;
+    public class Main{
+    static int maxn = 200005,n,m;
+    static long INF = (long)2e18,ans = 0,mod = (int)1e9+7;
+    static Scanner sc = new Scanner (System.in);
+    static BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+    static StreamTokenizer st  =new StreamTokenizer(bf);
+    static PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out));
+    public static void main(String[]args) throws IOException{
+        int T = 1;
+        //T = Integer.parseInt(S());
+        while(T-->0) solve();
+        pw.flush();
+    }
+    static final int I() throws IOException {
+        st.nextToken();
+        return (int)st.nval;
+    }
+    static void solve() throws IOException{
+        n = I();
+        long x[] = new long [n+1];
+        for(int i=1;i<=n;i++) x[i] = I();
+        int []a = new int [n+1];
+        int []b = new int [n+1];
+        for(int i=1;i<n;i++) {
+            a[i] = I();b[i] = I();
+        }
+        double dp[][] = new double[n+1][2];
+        dp[1][0] = x[1]; //底端最小用时
+        dp[1][1] = x[1] + a[1] / 0.7;  //传送门用时
+        for(int i=2; i<=n ; i++) {
+            dp[i][0] = Math.min(dp[i-1][0]+x[i]-x[i-1], dp[i-1][1] + b[i-1]/1.3);
+            dp[i][1] = Math.min(dp[i][0] + a[i] / 0.7, dp[i-1][1] + ((b[i-1]>a[i])?(b[i-1]-a[i])/1.3: (a[i]-b[i-1])/0.7));
+        }
+        pw.printf("%.2f",dp[n][0]);
+    }
+    } <code>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/24/8.9/</url>
+    <content><![CDATA[<h2 id="Algorithm-problem-note"><a href="#Algorithm-problem-note" class="headerlink" title="Algorithm problem note"></a>Algorithm problem note</h2><h3 id="day-3"><a href="#day-3" class="headerlink" title="day 3"></a>day 3</h3><p><strong>Problem description</strong>:<br>Given A positive integer x, find the shortest possible array of only positive integers A such that there are exactly x to i in A and j is Ai &gt; Aj.</p>
+<p>If there are multiple such arrays, output the one with the smallest lexicographic order.</p>
+<span id="more"></span>
+
+<p><strong>Solution</strong><br>First of all, there is a problem with the description of the topic, there is no explanation of the relationship between i and j, it should be to ensure that i &lt; j when Ai &gt; Aj (referred to as reverse order), I do not understand, this is a competition, the description can be so vague, I want to laugh, the water cup is really worthy of its name.<br>Here’s the idea:<br>① Special cases are preferred, the array is a strictly decremented array (each number varies by 1, and the last digit must be 1), as follows:<br>The length is 7, the corresponding array is [7,6,5,4,3,2,1], and according to combinatorial mathematics C(7,2) &#x3D; 21, there are 21 reverse pairs<br>The length is 8, the corresponding array is [8,7,6,5,4,3,2,1], and according to combinatorial mathematics C(8,2) &#x3D; 28, there are 28 reverse pairs<br>Assuming that the number of reverse pairs is x, when x ∈ (21,28), the array length is 8; When x &#x3D; 21, the array length is 7<br>How do you find the array length? Suppose the array length is L, C(L, 2) ≥ x, you can divide the length, you can also directly solve the equation, simple binary equation, junior high school knowledge:<br>L * (L-1) &#x2F; 2 ≥ x<br>&#x3D;&gt; L2 - L - 2x ≥ 0<br>If C(L, 2) is exactly equal to x, then the answer is a strictly decremented array (each digit is 1 different, and the last digit must be 1).<br>② So if C(L,2) is not equal to x, if x &#x3D; 25, we can find L &#x3D; 7 by step 1, the array is [7,6,5,4,3,2,1], a total of 21 pairs of reverse order, then how to complete the difference of 4 pairs? In fact, as long as you add a 5 to the beginning of the array, the array becomes [5,7,6,5,4,3,2,1], with the first 5 and yellow digits in reverse order, just 4 pairs<br>Of course, this is only one of the answers, which does not meet the requirements of minimum lexicographic order. So we need to simplify:</p>
+<ol>
+<li>[5,7,6,5,4,3,2,1] Change 5 to 4 to get [5,7,6,4,4,3,2,1], and it can be found that the number of reverse pairs does not change, because the original bold reverse pair is changed into the modified bold reverse pair, and only this pair has been transferred, so the number of reverse pairs does not change. But the lexicographical order gets smaller.<br>2, [5,7,6,4,4,3,2,1] greedy, subtract 1 from all the yellow parts to get [5,6,5,4,4,3,2,1], obviously the number of reverse pairs remains unchanged, but the lexicographic order becomes smaller.<br>3, [5,6,5,4,4,3,2,1] The yellow part is changed to [5,6,5,4,3,2,1,1], which is equivalent to changing 4 into 1, and it can be found that the number of reverse pairs remains unchanged, but the lexicographical order becomes smaller.<br>4, [5,6,5,4,3,2,1,1] This situation is very similar to the first step, change 5 to 4 to get [5,6,4,4,3,2,1,1], keep repeating steps 1 to 3, you can get the final result:<br>,4,3,3,2,2,1,1 [5]<br>This result is the most “simplified”, that is, the minimum lexicographic order<br><strong>Code implementation</strong><pre>
+
+     n = int(input())
+     x = int((1 + (1+8*n)**0.5) / 2)
+     if x*(x-1) == 2 * n:
+         print(x)
+         print(x,end='')
+         x -= 1
+         while x:
+             print(' ',end='')
+             print(x,end='')
+             x -= 1
+     else:
+         x += 1
+         print(x)
+         total = x*(x-1)//2
+         total -= n
+         from collections import deque
+         res = deque()
+         if total <= x // 2:
+             num = 1
+             while num <= total:
+                 res.append(num)
+                 res.append(num)
+                 num += 1
+             while len(res) < x:
+                     res.append(num)
+                 num += 1
+         else:
+         tmp = x - total - 1
+         num = 1
+         while num <= tmp:
+             res.append(num)
+            res.append(num)
+             num += 1
+         tmp = num
+         while len(res) < x - 1:
+             res.append(num)
+             num += 1
+         res.append(tmp)
+     print(res.pop(),end='')
+     while res:
+         print(' ',end='')
+         print(res.pop(),end='')
+         print() <code></li>
+</ol>
+]]></content>
+  </entry>
+  <entry>
     <title>Configuration Problems After Reinstalling QT</title>
     <url>/2023/08/06/A%20Configuration%20Problem%20after%20Reinstalling%20QT/</url>
     <content><![CDATA[<h1 id="The-core-is-a-plugin-named-‘Clang-Code-Model’"><a href="#The-core-is-a-plugin-named-‘Clang-Code-Model’" class="headerlink" title="The core is a plugin named ‘Clang Code Model’"></a>The core is a plugin named ‘Clang Code Model’</h1><ul>
@@ -136,6 +793,13 @@ do you want to go to [baidu][baidu]?
         <tag>Markdown</tag>
         <tag>Writing</tag>
       </tags>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2023/08/08/%5Bessay%201%5DA%20Bug%20of%20Inserting%20a%20Img%20in%20VSCode/</url>
+    <content><![CDATA[<hr>
+<p>title: A Bug of Inserting a img in VSCode<br>tags: [Essay, VSCode]<br>categories:</p>
+]]></content>
   </entry>
   <entry>
     <title>to Prepare a Wechat Miniapp</title>
